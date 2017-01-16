@@ -24,10 +24,10 @@ func loadConfig() tomlConfig {
 	var config tomlConfig
 	if configFile != "" {
 		if _, err := toml.DecodeFile(configFile, &config); err != nil {
-			return config
-		} else {
 			fmt.Println(err)
 			fmt.Println("failed loading config, going to fallback")
+		} else {
+			return config
 		}
 	}
 	if _, err := toml.DecodeFile("./config.toml", &config); err != nil {
