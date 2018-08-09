@@ -15,4 +15,10 @@ type HookWithRepository struct {
 		HTMLURL     string `json:"html_url"`
 		Description string `json:"description"`
 	} `json:"repository"`
+	Project struct {
+		ID                int    `json:"id"`
+		Name              string `json:"name"`
+		Namespace         string `json:"namespace"`
+		PathWithNamespace string `json:"path_with_namespace"`
+	}
 }

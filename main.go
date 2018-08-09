@@ -82,7 +82,7 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 		if verbose {
 			color.Set(color.FgRed)
 			fmt.Fprintf(os.Stderr, "Discarding %s on %s with ref %s.\n",
-				color.CyanString(event), color.YellowString(eventPayload.Project.PathWithNamespace), color.YellowString(eventPayload.Ref))
+				color.CyanString(event), color.YellowString(eventPayload.Repository.FullName), color.YellowString(eventPayload.Ref))
 			color.Set(color.Faint)
 			BadRequestHandler(w, r)
 			return // 400 Bad Request
@@ -92,9 +92,9 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) bool {
-	if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":"+eventPayload.Ref]; ok {
+	if _, ok := events[event+":"+eventPayload.Repository.FullName+":"+eventPayload.Ref]; ok {
 		return true
-	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
+	} else if _, ok := events[event+":"+eventPayload.Repository.FullName+":all"]; ok {
 		return true
 	}
 	return false
@@ -102,25 +102,21 @@ func shouldHandleEvent(events map[string]event, event string, eventPayload HookW
 
 // handleEvent handles any event.
 func handleEvent(event string, hook HookWithRepository, payload []byte) {
-	eventKey := ""
 	// show related commits if push event
 	if event == "push" {
 		var pushEvent HookPush
 		json.Unmarshal(payload, &pushEvent)
-		fmt.Println(event, "detected on", color.YellowString(pushEvent.Project.PathWithNamespace),
+		fmt.Println(event, "detected on", color.YellowString(hook.Repository.FullName),
 			"with ref", color.YellowString(hook.Ref), "with the following commits:")
 		for _, commit := range pushEvent.Commits {
 			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
 		}
-		eventKey = event + ":" + pushEvent.Project.PathWithNamespace + ":" + hook.Ref
-	} else {
-		// prepare the command
-		eventKey = event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
-
 	}
 
+	// prepare the command
+	eventKey := event + ":" + hook.Repository.FullName + ":" + hook.Ref
 	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
+		eventKey = event + ":" + hook.Repository.FullName + ":all"
 	}
 	cmd := exec.Command(config.Events[eventKey].Cmd,
 		strings.Split(config.Events[eventKey].Args, " ")...)
