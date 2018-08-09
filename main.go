@@ -82,7 +82,7 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 		if verbose {
 			color.Set(color.FgRed)
 			fmt.Fprintf(os.Stderr, "Discarding %s on %s with ref %s.\n",
-				color.CyanString(event), color.YellowString(eventPayload.Repository.FullName), color.YellowString(eventPayload.Ref))
+				color.CyanString(event), color.YellowString(eventPayload.Project.PathWithNamespace), color.YellowString(eventPayload.Ref))
 			color.Set(color.Faint)
 			BadRequestHandler(w, r)
 			return // 400 Bad Request
@@ -92,9 +92,9 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) bool {
-	if _, ok := events[event+":"+eventPayload.Repository.FullName+":"+eventPayload.Ref]; ok {
+	if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":"+eventPayload.Ref]; ok {
 		return true
-	} else if _, ok := events[event+":"+eventPayload.Repository.FullName+":all"]; ok {
+	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
 		return true
 	}
 	return false
@@ -106,7 +106,7 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	if event == "push" {
 		var pushEvent HookPush
 		json.Unmarshal(payload, &pushEvent)
-		fmt.Println(event, "detected on", color.YellowString(hook.Repository.FullName),
+		fmt.Println(event, "detected on", color.YellowString(hook.Project.PathWithNamespace),
 			"with ref", color.YellowString(hook.Ref), "with the following commits:")
 		for _, commit := range pushEvent.Commits {
 			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
@@ -114,9 +114,9 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	}
 
 	// prepare the command
-	eventKey := event + ":" + hook.Repository.FullName + ":" + hook.Ref
+	eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
 	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":" + hook.Repository.FullName + ":all"
+		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
 	}
 	cmd := exec.Command(config.Events[eventKey].Cmd,
 		strings.Split(config.Events[eventKey].Args, " ")...)
@@ -179,13 +179,12 @@ func main() {
 	// load the config.toml
 	config = loadConfig()
 	addr := config.Addr + ":" + strconv.Itoa(config.Port)
-	color.White(`
-    __                                     
+	color.White(`    __                                     
    / /_  ____ __________  ____  ____  ____ 
   / __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
  / / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
 /_/ /_/\__,_/_/  / .___/\____/\____/_/ /_/ 
-                /_/                        ab
+                /_/                        
 `)
 	color.White("\tListening on " + addr)
 	readyToListen := false
