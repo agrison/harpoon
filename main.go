@@ -179,7 +179,8 @@ func main() {
 	// load the config.toml
 	config = loadConfig()
 	addr := config.Addr + ":" + strconv.Itoa(config.Port)
-	color.White(`    __                                     
+	color.White(`
+    __                                     
    / /_  ____ __________  ____  ____  ____ 
   / __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
  / / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
