@@ -106,7 +106,7 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	if event == "push" {
 		var pushEvent HookPush
 		json.Unmarshal(payload, &pushEvent)
-		fmt.Println(event, "detected on", color.YellowString(hook.Project.PathWithNamespace),
+		fmt.Println(event, "detected on", color.YellowString(pushEvent.Project.PathWithNamespace),
 			"with ref", color.YellowString(hook.Ref), "with the following commits:")
 		for _, commit := range pushEvent.Commits {
 			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
@@ -114,9 +114,9 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	}
 
 	// prepare the command
-	eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
+	eventKey := event + ":" + pushEvent.Project.PathWithNamespace + ":" + hook.Ref
 	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
+		eventKey = event + ":" + pushEvent.Project.PathWithNamespace + ":all"
 	}
 	cmd := exec.Command(config.Events[eventKey].Cmd,
 		strings.Split(config.Events[eventKey].Args, " ")...)
