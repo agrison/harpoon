@@ -97,6 +97,8 @@ func shouldHandleEvent(events map[string]event, event string, eventPayload HookW
 		return true
 	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
 		return true
+	} else if _, ok := events[event+":all:all"]; ok {
+		return true
 	}
 	return false
 }
@@ -185,7 +187,7 @@ func main() {
   / __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
  / / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
 /_/ /_/\__,_/_/  / .___/\____/\____/_/ /_/ 
-                /_/                        ab
+                /_/                        v2
 `)
 	color.White("\tListening on " + addr)
 	readyToListen := false
