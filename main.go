@@ -154,7 +154,7 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	err := cmd.Start()
 	if err != nil {
 		color.Set(color.FgRed)
-		fmt.Fprintln(os.Stderr, "Error starting Cmd", err)
+		fmt.Fprintln(os.Stderr, "Error starting Cmd ", cmd.Path, cmd.Args, err)
 		color.Set(color.Faint)
 		return
 	}
