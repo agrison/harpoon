@@ -70,7 +70,8 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(payload, &eventPayload)
 
 	// verify that this is an event that we should process
-	event := r.Header.Get(headerEvent)
+	// event := r.Header.Get(headerEvent)
+	event := eventPayload.EventName
 	if event == "ping" {
 		return // always respond 200 to pings
 	}
