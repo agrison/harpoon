@@ -102,6 +102,7 @@ func shouldHandleEvent(events map[string]event, event string, eventPayload HookW
 
 // handleEvent handles any event.
 func handleEvent(event string, hook HookWithRepository, payload []byte) {
+	eventKey := ""
 	// show related commits if push event
 	if event == "push" {
 		var pushEvent HookPush
@@ -111,12 +112,15 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 		for _, commit := range pushEvent.Commits {
 			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
 		}
+		eventKey = event + ":" + pushEvent.Project.PathWithNamespace + ":" + hook.Ref
+	} else {
+		// prepare the command
+		eventKey = event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
+
 	}
 
-	// prepare the command
-	eventKey := event + ":" + pushEvent.Project.PathWithNamespace + ":" + hook.Ref
 	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":" + pushEvent.Project.PathWithNamespace + ":all"
+		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
 	}
 	cmd := exec.Command(config.Events[eventKey].Cmd,
 		strings.Split(config.Events[eventKey].Args, " ")...)
