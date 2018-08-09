@@ -121,8 +121,8 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	if _, ok := config.Events[eventKey]; !ok {
 		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
 	}
-	cmd := exec.Command(config.Events[eventKey].Cmd,
-		strings.Split(config.Events[eventKey].Args, " ")...)
+	cmd := exec.Command(config.Events[eventKey].cmd,
+		strings.Split(config.Events[eventKey].args, " ")...)
 
 	// in case of -verbose we log the output of the executed command
 	if verbose {
