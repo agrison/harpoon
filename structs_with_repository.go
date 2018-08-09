@@ -7,7 +7,6 @@ type HookWithRepository struct {
 		ID       int    `json:"id"`
 		Name     string `json:"name"`
 		FullName string `json:"full_name"`
-		Url      string `json:"url"`
 		Owner    struct {
 			Name  string `json:"name"`
 			Email string `json:"email"`

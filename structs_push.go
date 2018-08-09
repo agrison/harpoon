@@ -52,12 +52,6 @@ type HookPush struct {
 		Removed  []interface{} `json:"removed"`
 		Modified []string      `json:"modified"`
 	} `json:"head_commit"`
-	Project struct {
-		ID                int    `json:"id"`
-		Name              string `json:"name"`
-		Namespace         string `json:"namespace"`
-		PathWithNamespace string `json:"path_with_namespace"`
-	}
 	Repository struct {
 		ID       int    `json:"id"`
 		Name     string `json:"name"`
