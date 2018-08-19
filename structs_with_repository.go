@@ -2,6 +2,7 @@ package main
 
 // HookWithRepository represents an event message sent by Github that contains a "repository" field.
 type HookWithRepository struct {
+	EventName  string `json:"event_name"`
 	Ref        string `json:"ref"`
 	Repository struct {
 		ID       int    `json:"id"`
@@ -15,4 +16,10 @@ type HookWithRepository struct {
 		HTMLURL     string `json:"html_url"`
 		Description string `json:"description"`
 	} `json:"repository"`
+	Project struct {
+		ID                int    `json:"id"`
+		Name              string `json:"name"`
+		Namespace         string `json:"namespace"`
+		PathWithNamespace string `json:"path_with_namespace"`
+	}
 }

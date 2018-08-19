@@ -7,7 +7,7 @@ AssertFileIsExecutable=/usr/local/bin/harpoon
 [Service]
 User=%i
 Type=simple
-ExecStart=/usr/local/bin/harpoon /home/%i/harpoon.toml
+ExecStart=/usr/local/bin/harpoon -c /home/%i/harpoon.toml
 Nice=5
 
 [Install]
