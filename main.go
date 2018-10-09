@@ -129,13 +129,6 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 		for _, commit := range pushEvent.Commits {
 			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
 		}
-		// debug
-		b, err := json.MarshalIndent(pushEvent.Commits, "", "  ")
-		if err != nil {
-			fmt.Println("error:", err)
-		}
-		fmt.Print(string(b))
-		// end debug
 		commit := pushEvent.Commits[0]
 		cmd = exec.Command(config.Events[eventKey].Cmd,
 			event,
