@@ -13,7 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
+	// "strings"
 	"time"
 
 	"github.com/NoahShen/gotunnelme/src/gotunnelme" // for tunneling
@@ -105,16 +105,6 @@ func shouldHandleEvent(events map[string]event, event string, eventPayload HookW
 
 // handleEvent handles any event.
 func handleEvent(event string, hook HookWithRepository, payload []byte) {
-	// show related commits if push event
-	if event == "push" {
-		var pushEvent HookPush
-		json.Unmarshal(payload, &pushEvent)
-		fmt.Println(event, "detected on", color.YellowString(hook.Project.PathWithNamespace),
-			"with ref", color.YellowString(hook.Ref), "with the following commits:")
-		for _, commit := range pushEvent.Commits {
-			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
-		}
-	}
 
 	// prepare the command
 	eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
@@ -124,9 +114,33 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 	if _, ok := config.Events[eventKey]; !ok {
 		eventKey = event + ":all:all"
 	}
-
 	cmd := exec.Command(config.Events[eventKey].Cmd,
-		strings.Split(config.Events[eventKey].Args, " ")...)
+		event,
+		hook.Project.PathWithNamespace,
+		hook.Ref,
+		// strings.Split(config.Events[eventKey].Args, " ")...,
+	)
+	// show related commits if push event
+	if event == "push" {
+		var pushEvent HookPush
+		json.Unmarshal(payload, &pushEvent)
+		fmt.Println(event, "detected on", color.YellowString(hook.Project.PathWithNamespace),
+			"with ref", color.YellowString(hook.Ref), "with the following commits:")
+		for _, commit := range pushEvent.Commits {
+			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
+		}
+
+		cmd = exec.Command(config.Events[eventKey].Cmd,
+			event,
+			hook.Project.PathWithNamespace,
+			hook.Ref,
+			// pushEvent.Commits[0].Timestamp,
+			// pushEvent.Commits[0].Message,
+			// pushEvent.Commits[0].Author.Name,
+			// strings.Split(config.Events[eventKey].Args, " ")...,
+		)
+
+	}
 
 	// in case of -verbose we log the output of the executed command
 	if verbose {
@@ -186,12 +200,12 @@ func main() {
 	// load the config.toml
 	config = loadConfig()
 	addr := config.Addr + ":" + strconv.Itoa(config.Port)
-	color.White(`    __                                     
-   / /_  ____ __________  ____  ____  ____ 
-  / __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
- / / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
+	color.White(`~~~~__                                     
+~~~/ /_  ____ __________  ____  ____  ____ 
+~~/ __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
+~/ / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
 /_/ /_/\__,_/_/  / .___/\____/\____/_/ /_/ 
-                /_/                        v2
+                /_/                        
 `)
 	color.White("\tListening on " + addr)
 	readyToListen := false
