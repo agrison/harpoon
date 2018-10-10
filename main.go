@@ -77,8 +77,9 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check whether we're interested in that event
-	if shouldHandleEvent(config.Events, event, eventPayload) {
-		handleEvent(event, eventPayload, []byte(payload))
+	willHandle, eventKey := shouldHandleEvent(config.Events, event, eventPayload)
+	if willHandle {
+		handleEvent(event, eventPayload, []byte(payload), eventKey)
 	} else {
 		if verbose {
 			color.Set(color.FgRed)
@@ -92,32 +93,33 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) bool {
+func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) (bool, string) {
 	if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":"+eventPayload.Ref]; ok {
-		return true
+		return true, event + ":" + eventPayload.Project.PathWithNamespace + ":" + eventPayload.Ref
 	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
-		return true
+		return true, event + ":" + eventPayload.Project.PathWithNamespace + ":all"
 	} else if _, ok := events[event+":all:all"]; ok {
-		return true
+		return true, event + ":all:all"
 	}
-	return false
+	return false, "empty"
 }
 
 // handleEvent handles any event.
-func handleEvent(event string, hook HookWithRepository, payload []byte) {
+func handleEvent(event string, hook HookWithRepository, payload []byte, eventKey string) {
 
 	// prepare the command
-	eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
-	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
-	}
-	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":all:all"
-	}
+	// eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
+	// if _, ok := config.Events[eventKey]; !ok {
+	// 	eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
+	// }
+	// if _, ok := config.Events[eventKey]; !ok {
+	// 	eventKey = event + ":all:all"
+	// }
 	cmd := exec.Command(config.Events[eventKey].Cmd,
 		event,
 		hook.Project.PathWithNamespace,
 		hook.Ref,
+		eventKey,
 		// strings.Split(config.Events[eventKey].Args, " ")...,
 	)
 	// show related commits if push event
@@ -134,6 +136,7 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 			event,
 			hook.Project.PathWithNamespace,
 			hook.Ref,
+			eventKey,
 			commit.Timestamp.String(),
 			commit.Message,
 			commit.Author.Name,
