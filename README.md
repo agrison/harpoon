@@ -53,6 +53,23 @@ like `push`, `watch`, `pull_request`, ...; `{repository}` is the GitHub reposito
 For the above example, it will echo `Push!` when something has been pushed to the `develop` branch of your GitHub repository. 
 It will also echo `Watch!` if someone stars it.
 
+#### Script Arguments
+
+The arguments passed to the script have changed, the 'args' in the toml file are borked and couldn't get them to work. However the following arguments get pushed to your script in order. 
+
+```
+event: push
+hook.Project.PathWithNamespace: mygroup/test-repo
+hook.Ref: refs/heads/master
+eventKey: push:all:all
+commit.Timestamp.String(): 2018-10-10 17:39:44 +0000 UTC
+commit.Message: testttt
+commit.Author.Name: Some Guy
+```
+
+If you do not use a 'push' event, then the 'commit' messages are not sent.
+
+
 #### Tunneling
 
 Tunneling can be enabled using `localtunnel.me`, you just have to enable it in the `config.toml` and indicate a desired subdomain using the `tunnelName` field.
