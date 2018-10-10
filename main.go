@@ -14,11 +14,10 @@ import (
 	"os/exec"
 	"strconv"
 	// "strings"
-	"time"
-
 	"github.com/NoahShen/gotunnelme/src/gotunnelme" // for tunneling
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
+	"time"
 )
 
 const (
@@ -94,12 +93,19 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) (bool, string) {
+	var eventKey string
 	if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":"+eventPayload.Ref]; ok {
-		return true, event + ":" + eventPayload.Project.PathWithNamespace + ":" + eventPayload.Ref
+		eventKey = event + ":" + eventPayload.Project.PathWithNamespace + ":" + eventPayload.Ref
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey)
+		return true, eventKey
 	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
-		return true, event + ":" + eventPayload.Project.PathWithNamespace + ":all"
+		eventKey = event + ":" + eventPayload.Project.PathWithNamespace + ":all"
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey)
+		return true, eventKey
 	} else if _, ok := events[event+":all:all"]; ok {
-		return true, event + ":all:all"
+		eventKey = event + ":all:all"
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey)
+		return true, eventKey
 	}
 	return false, "empty"
 }
