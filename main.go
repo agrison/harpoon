@@ -96,15 +96,15 @@ func shouldHandleEvent(events map[string]event, event string, eventPayload HookW
 	var eventKey string
 	if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":"+eventPayload.Ref]; ok {
 		eventKey = event + ":" + eventPayload.Project.PathWithNamespace + ":" + eventPayload.Ref
-		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey)
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey+"\n")
 		return true, eventKey
 	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
 		eventKey = event + ":" + eventPayload.Project.PathWithNamespace + ":all"
-		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey)
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey+"\n")
 		return true, eventKey
 	} else if _, ok := events[event+":all:all"]; ok {
 		eventKey = event + ":all:all"
-		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey)
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey+"\n")
 		return true, eventKey
 	}
 	return false, "empty"
