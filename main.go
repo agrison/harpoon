@@ -13,12 +13,11 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
-	"time"
-
+	// "strings"
 	"github.com/NoahShen/gotunnelme/src/gotunnelme" // for tunneling
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
+	"time"
 )
 
 const (
@@ -77,8 +76,9 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check whether we're interested in that event
-	if shouldHandleEvent(config.Events, event, eventPayload) {
-		handleEvent(event, eventPayload, []byte(payload))
+	willHandle, eventKey := shouldHandleEvent(config.Events, event, eventPayload)
+	if willHandle {
+		handleEvent(event, eventPayload, []byte(payload), eventKey)
 	} else {
 		if verbose {
 			color.Set(color.FgRed)
@@ -92,19 +92,42 @@ func HookHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) bool {
+func shouldHandleEvent(events map[string]event, event string, eventPayload HookWithRepository) (bool, string) {
+	var eventKey string
 	if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":"+eventPayload.Ref]; ok {
-		return true
+		eventKey = event + ":" + eventPayload.Project.PathWithNamespace + ":" + eventPayload.Ref
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey+"\n")
+		return true, eventKey
 	} else if _, ok := events[event+":"+eventPayload.Project.PathWithNamespace+":all"]; ok {
-		return true
+		eventKey = event + ":" + eventPayload.Project.PathWithNamespace + ":all"
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey+"\n")
+		return true, eventKey
 	} else if _, ok := events[event+":all:all"]; ok {
-		return true
+		eventKey = event + ":all:all"
+		fmt.Fprintf(os.Stdout, "eventKey: "+eventKey+"\n")
+		return true, eventKey
 	}
-	return false
+	return false, "empty"
 }
 
 // handleEvent handles any event.
-func handleEvent(event string, hook HookWithRepository, payload []byte) {
+func handleEvent(event string, hook HookWithRepository, payload []byte, eventKey string) {
+
+	// prepare the command
+	// eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
+	// if _, ok := config.Events[eventKey]; !ok {
+	// 	eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
+	// }
+	// if _, ok := config.Events[eventKey]; !ok {
+	// 	eventKey = event + ":all:all"
+	// }
+	cmd := exec.Command(config.Events[eventKey].Cmd,
+		event,
+		hook.Project.PathWithNamespace,
+		hook.Ref,
+		eventKey,
+		// strings.Split(config.Events[eventKey].Args, " ")...,
+	)
 	// show related commits if push event
 	if event == "push" {
 		var pushEvent HookPush
@@ -114,19 +137,19 @@ func handleEvent(event string, hook HookWithRepository, payload []byte) {
 		for _, commit := range pushEvent.Commits {
 			fmt.Printf("\t%s - %s by %s\n", commit.Timestamp, color.CyanString(commit.Message), color.BlueString(commit.Author.Name))
 		}
-	}
+		commit := pushEvent.Commits[0]
+		cmd = exec.Command(config.Events[eventKey].Cmd,
+			event,
+			hook.Project.PathWithNamespace,
+			hook.Ref,
+			eventKey,
+			commit.Timestamp.String(),
+			commit.Message,
+			commit.Author.Name,
+			// strings.Split(config.Events[eventKey].Args, " ")...,
+		)
 
-	// prepare the command
-	eventKey := event + ":" + hook.Project.PathWithNamespace + ":" + hook.Ref
-	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":" + hook.Project.PathWithNamespace + ":all"
 	}
-	if _, ok := config.Events[eventKey]; !ok {
-		eventKey = event + ":all:all"
-	}
-
-	cmd := exec.Command(config.Events[eventKey].Cmd,
-		strings.Split(config.Events[eventKey].Args, " ")...)
 
 	// in case of -verbose we log the output of the executed command
 	if verbose {
@@ -186,12 +209,12 @@ func main() {
 	// load the config.toml
 	config = loadConfig()
 	addr := config.Addr + ":" + strconv.Itoa(config.Port)
-	color.White(`    __                                     
-   / /_  ____ __________  ____  ____  ____ 
-  / __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
- / / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
+	color.White(`~~~~__                                     
+~~~/ /_  ____ __________  ____  ____  ____ 
+~~/ __ \/ __ ` + "`" + `/ ___/ __ \/ __ \/ __ \/ __ \
+~/ / / / /_/ / /  / /_/ / /_/ / /_/ / / / /
 /_/ /_/\__,_/_/  / .___/\____/\____/_/ /_/ 
-                /_/                        v2
+~~~~~~~~~~~~~~~~/_/                        
 `)
 	color.White("\tListening on " + addr)
 	readyToListen := false
